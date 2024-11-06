@@ -1,0 +1,42 @@
+
+import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def dsigmoid(x):
+    return x * (1 - x)
+
+def RNN(X, W_xh, W_hh, W_hy, b_h, b_y):
+    # X: Input sequence (batch_size, seq_len, input_dim)
+    # W_xh: Weight matrix from input to hidden layer (input_dim, hidden_dim)
+    # W_hh: Recurrent weight matrix (hidden_dim, hidden_dim)
+    # W_hy: Weight matrix from hidden layer to output layer (hidden_dim, output_dim)
+    # b_h: Bias for the hidden layer (hidden_dim,)
+    # b_y: Bias for the output layer (output_dim,)
+
+    hidden_state = np.zeros((X.shape[0], X.shape[1], W_hh.shape[0]))
+    output = np.zeros((X.shape[0], X.shape[1], W_hy.shape[1]))
+
+    for t in range(X.shape[1]):
+        hidden_state[:, t, :] = sigmoid(np.dot(X[:, t, :], W_xh) + np.dot(hidden_state[:, t-1, :], W_hh) + b_h)
+        output[:, t, :] = sigmoid(np.dot(hidden_state[:, t, :], W_hy) + b_y)
+
+    return output
+
+# Example usage:
+input_dim = 10
+hidden_dim = 5
+output_dim = 2
+seq_len = 4
+batch_size = 2
+
+X = np.random.rand(batch_size, seq_len, input_dim)
+W_xh = np.random.rand(input_dim, hidden_dim)
+W_hh = np.random.rand(hidden_dim, hidden_dim)
+W_hy = np.random.rand(hidden_dim, output_dim)
+b_h = np.zeros((hidden_dim,))
+b_y = np.zeros((output_dim,))
+
+output = RNN(X, W_xh, W_hh, W_hy, b_h, b_y)
+print(output)

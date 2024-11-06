@@ -1,0 +1,52 @@
+
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+
+# Load the dataset
+data = pd.read_csv(r"D:\Atharva\STUDY\I2IT\BE\Academic\DL\Practical\SS_Dataset\3 MNIST-20241105T053934Z-001\3 MNIST\mnist_784_csv.csv")  # Replace with the actual path
+
+# Separate features and target
+X = data.drop(columns=['class']).values
+y = data['class'].values
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Normalize the pixel values to (0-1)
+X_train, X_test = X_train / 255.0, X_test / 255.0
+
+# Build and compile the model
+model = Sequential([
+    Dense(128, activation='relu', input_shape=(X_train.shape[1],)),  # Input layer
+    Dense(64, activation='relu'),                                   # Hidden layer
+    Dense(10, activation='softmax')                                 # Output layer for 10 classes
+])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.1)
+
+# Evaluate the model on the test set
+accuracy = model.evaluate(X_test, y_test)[1]
+print(f"\nTest Accuracy: {accuracy:.4f}")
+
+# Make a prediction on the first test sample
+sample_index = 0  # Change this index for different test samples
+sample_data = X_test[sample_index].reshape(1, -1)
+predicted_label = model.predict(sample_data).argmax()
+
+# Get details of the test case
+test_case_details = X_test[sample_index].reshape(28, 28)  # Reshape for display
+
+# Print test case prediction
+print("\nTest Case Prediction (Predicted Digit):", predicted_label)
+
+# Plot the test case image
+plt.imshow(test_case_details, cmap='gray')
+plt.title(f'Predicted Digit: {predicted_label}')
+plt.axis('off')  # Turn off axis numbers and ticks
+plt.show()
