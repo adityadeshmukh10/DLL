@@ -1,0 +1,76 @@
+import tensorflow as tf
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+import random
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Flatten, Dense
+from tensorflow.keras.optimizers import SGD
+mnist_train = pd.read_csv('mnist_train.csv')
+mnist_test = pd.read_csv('mnist_test.csv')
+x_train = mnist_train.iloc[:, 1:].values
+y_train = mnist_train.iloc[:, 0].values
+x_test = mnist_test.iloc[:, 1:].values
+y_test = mnist_test.iloc[:, 0].values
+# Normalize the pixel values
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+# Reshape the data for the neural network
+x_train = x_train.reshape(-1, 28, 28)
+x_test = x_test.reshape(-1, 28, 28)
+model = Sequential([
+    Flatten(input_shape=(28, 28)),
+    Dense(128, activation="relu"),
+    Dense(10, activation="softmax")
+])
+
+# Compile the model
+model.compile(optimizer=SGD(), loss="sparse_categorical_crossentropy", metrics=['accuracy'])
+# Train the model
+history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=10)
+# Evaluate the model
+test_loss, test_acc = model.evaluate(x_test, y_test)
+print("Loss: %.3f" % test_loss)
+print("Accuracy: %.3f" % test_acc)
+# Display a random test image with its predicted label
+n = random.randint(0, 9999)
+plt.imshow(x_test[n], cmap='gray')
+plt.show()
+predicted_value = model.predict(x_test)
+predicted_number = np.argmax(predicted_value[n])
+print('Predicted value:', predicted_number)
+# Plot accuracy and loss over epochs
+print(history.history.keys())
+plt.figure(figsize=(14, 5))
+# Plot accuracy
+plt.subplot(1, 2, 1)
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.title('Model Accuracy')
+plt.legend()
+
+# Plot loss
+plt.subplot(1, 2, 2)
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Model Loss')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+# Combined plot (optional)
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Training Loss and Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy / Loss')
+plt.legend(loc='upper right')
+plt.show()

@@ -1,0 +1,70 @@
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras import layers, models
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.preprocessing import image
+data_dir = 'C:\\Users\\HP\\Downloads\\Animal 10\\Animal 10\\raw-img'
+class_names = os.listdir(data_dir)
+class_names
+train_datagen = ImageDataGenerator(rescale=1./255.0,validation_split=0.2)
+
+train_generator = train_datagen.flow_from_directory(
+    data_dir,
+    target_size=(224,224),
+    batch_size = 32,
+    class_mode='categorical',
+    subset='training'
+)
+
+
+validation_generator = train_datagen.flow_from_directory(
+    data_dir,
+    target_size=(224,224),
+    batch_size = 32,
+    class_mode='categorical',
+    subset='validation'
+)
+
+model = ResNet50(weights='imagenet',include_top=False,input_shape=(224,224,3))
+for layer in model.layers:
+    layer.trainable = False
+animal_model = models.Sequential()
+animal_model.add(model)
+animal_model.add(layers.GlobalAveragePooling2D())
+animal_model.add(layers.Dense(129, activation='relu'))
+animal_model.add(layers.Dropout(0.5))
+animal_model.add(layers.Dense(len(class_names), activation='softmax'))
+animal_model.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
+# Train the model
+history = animal_model.fit(train_generator,
+                           validation_data = validation_generator,
+                           epochs=1)
+
+for layer in model.layers[-20:]:
+    layer.trainable = True
+
+animal_model.compile(optimizer=Adam(1e-5), loss='categorical_crossentropy', metrics=['accuracy'])
+history_fine = animal_model.fit(train_generator, 
+                         validation_data=validation_generator, 
+                         epochs=1)
+def prediction(img_path):
+    img = image.load_img(img_path, target_size=(224, 224))
+    img_arr = image.img_to_array(img)
+    img_arr = np.expand_dims(img_arr, axis=0)
+    img_arr /= 255.0
+
+    predictions = animal_model.predict(img_arr)
+    predicted_class = class_names[np.argmax(predictions[0])]
+
+    plt.imshow(img)
+    plt.title(f'Predicted: {predicted_class}')
+    plt.axis('off')
+    plt.show()
+
+test_image_path = 'Dataset/NEW/12 Animal/raw-img/ragno/e83cb2082bfd013ed1584d05fb1d4e9fe777ead218ac104497f5c97ca5ecb5b1_640.jpg'
+prediction(test_image_path)
+test_image_path = 'Dataset/NEW/12 Animal/raw-img/elefante/e133b10d2bf21c22d2524518b7444f92e37fe5d404b0144390f8c07aa4e5b0_640.jpg'
+prediction(test_image_path)

@@ -1,0 +1,70 @@
+import tensorflow as tf
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(64,activation='relu',input_shape=(32,)),
+    tf.keras.layers.Dense(10,activation='softmax')
+])
+model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics=['accuracy'])
+import numpy as np
+x_train = np.random.rand(1000,32)
+y_train = np.random.randint(0,10,size=(1000,))
+model.fit(x_train,y_train,epochs=10)
+import tensorflow as tf 
+import numpy as np
+tfmat = tf.constant([[1,2],[3,4]])
+print(tfmat)
+tf_zeroes = tf.zeros(shape=(3,3))
+print(tf_zeroes)
+tf_ones = tf.ones(shape=(3,3))
+print(tf_ones)
+am = tf.constant([[1,2],[3,4]])
+bm = tf.constant([[5,6],[7,8]])
+tf.add(am,bm)
+tf.subtract(am,bm)
+tf.multiply(am,bm)
+tf.divide(am,bm)
+# 2.Pytorch
+import torch
+import numpy as np
+data =[
+    [1,2],
+    [3,4]
+]
+x = torch.tensor(data)
+print(type(x))
+x_ones = torch.ones_like(x)
+print(x_ones)
+x_zeros = torch.zeros_like(x)
+print(x_zeros)
+shape = (2,4)
+random_tensor = torch.rand(shape)
+print(random_tensor)
+ones_tensor = torch.ones(shape)
+print(ones_tensor)
+print(type(ones_tensor))
+
+zeros_tensor = torch.zeros(shape)
+print(zeros_tensor)
+print(type(zeros_tensor))
+tensor = torch.rand(3, 4)
+print(tensor)
+print(tensor.shape)
+print(tensor.dtype)
+print(tensor.device)
+if torch.cuda.is_available():
+  tensor = tensor.to('cuda')
+  print("Device tensor is stored in ", tensor.device)
+tensor = torch.ones(4, 4)
+print(tensor)
+tensor1 = torch.zeros(4, 4)
+print(tensor1)
+tensor2 = torch.cat([tensor, tensor1])
+print(tensor2)
+
+tensor.mul(tensor1)
+tensor * tensor1
+tensor.T
+tensor.add_(3)
+print(tensor)
+
+t = torch.ones(5)
+print(t)
