@@ -1,0 +1,81 @@
+
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.models import Model
+import matplotlib.pyplot as plt
+
+# Load the mnist.csv dataset (assuming it's in the current directory and contains 785 columns: 1 label column + 784 pixel columns)
+csv_file_path = r"D:\Atharva\STUDY\I2IT\BE\Academic\DL\Practical\SS_Dataset\3 MNIST-20241105T053934Z-001\3 MNIST\mnist_784_csv.csv"
+data = pd.read_csv(csv_file_path)
+
+# If the dataset has labels in the first column, remove it (assuming the first column is the label)
+x_data = data.iloc[:, 1:].values.astype('float32') / 255.  # Take all columns except the first one
+
+# Split data into train and test sets
+# Assume that the first 60000 samples are for training and the remaining 10000 for testing
+x_train = x_data[:60000]
+x_test = x_data[60000:]
+
+# Add noise to the images
+noise_factor = 0.5
+x_train_noisy = x_train + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=x_train.shape)
+x_test_noisy = x_test + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=x_test.shape)
+
+# Clip the values to be in the valid range [0, 1]
+x_train_noisy = np.clip(x_train_noisy, 0., 1.)
+x_test_noisy = np.clip(x_test_noisy, 0., 1.)
+
+# Parameters
+input_dim = 784  # 28x28 images flattened
+encoding_dim = 64  # Size of encoding
+
+# Input layer
+input_img = Input(shape=(input_dim,))
+
+# Encoded representation
+encoded = Dense(encoding_dim, activation='relu')(input_img)
+
+# Decoded representation
+decoded = Dense(input_dim, activation='sigmoid')(encoded)
+
+# Autoencoder model
+autoencoder = Model(input_img, decoded)
+
+# Compile model
+autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
+
+# Train autoencoder
+autoencoder.fit(x_train_noisy, x_train,
+                epochs=10,
+                batch_size=256,
+                shuffle=True,
+                validation_data=(x_test_noisy, x_test))
+
+# Make predictions (denoising)
+denoised_imgs = autoencoder.predict(x_test_noisy)
+
+# Plotting original, noisy, and denoised images
+n = 10  # Number of images to display
+plt.figure(figsize=(20, 6))
+for i in range(n):
+    # Display noisy image
+    ax = plt.subplot(3, n, i + 1)
+    plt.imshow(x_test_noisy[i].reshape(28, 28), cmap='gray')
+    plt.title("Noisy Image")
+    plt.axis("off")
+
+    # Display denoised image
+    ax = plt.subplot(3, n, i + 1 + n)
+    plt.imshow(denoised_imgs[i].reshape(28, 28), cmap='gray')
+    plt.title("Denoised Image")
+    plt.axis("off")
+
+    # Display original image
+    ax = plt.subplot(3, n, i + 1 + 2*n)
+    plt.imshow(x_test[i].reshape(28, 28), cmap='gray')
+    plt.title("Original Image")
+    plt.axis("off")
+
+plt.show()
