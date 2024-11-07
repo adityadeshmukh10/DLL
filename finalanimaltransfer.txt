@@ -1,0 +1,56 @@
+import tensorflow as tf
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.models import Model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.optimizers import Adam
+import matplotlib.pyplot as plt
+import numpy as np
+base_model = MobileNetV2(weights='imagenet',include_top=False,input_shape=(224,224,3))
+base_model.trainable = False
+x = base_model.output
+x = GlobalAveragePooling2D()(x) # Pooling layer
+x = Dense(128, activation='relu')(x) # Dense layer
+predictions = Dense(10, activation='softmax')(x)
+model = Model(inputs=base_model.input, outputs=predictions)
+ #Compile the model
+model.compile(optimizer=Adam(learning_rate=0.001),loss='categorical_crossentropy', metrics=['accuracy'])
+datagen = ImageDataGenerator(rescale = 1./255.0,validation_split=0.2,horizontal_flip=True,zoom_range=0.2,shear_range=0.2)
+train_generator = datagen.flow_from_directory(
+    'raw-img',
+    target_size=(224,224),
+    batch_size=32,
+    class_mode='categorical',
+    subset='training'
+)
+validation_generator = datagen.flow_from_directory(
+ 'raw-img',
+ target_size=(224, 224),
+ batch_size=32,
+ class_mode='categorical',
+ subset='validation' # Set as validation data
+ )
+model.fit(train_generator, epochs=10, validation_data=validation_generator)
+test_loss, test_acc = model.evaluate(validation_generator)
+ print(f'Test Accuracy: {test_acc}')
+ x_val, y_val = next(validation_generator)
+ predictions = model.predict(x_val)
+predicted_labels = np.argmax(predictions, axis=1)
+# Convert the dict_keys to a list
+ class_labels = list(train_generator.class_indices.keys())
+ # Number of images to display
+ n = 10
+ # Plot images with predicted and actual classes
+ plt.figure(figsize=(20, 6))
+ for i in range(n):
+ # Display the image
+ ax = plt.subplot(2, n, i + 1)
+ plt.imshow(x_val[i]) # Display the image
+ # Get actual and predicted labels
+ actual_label = class_labels[np.argmax(y_val[i])]
+ predicted_label = class_labels[predicted_labels[i]]
+ 
+# Set the title
+ plt.title(f"Actual: {actual_label} \nPredicted: {predicted_label}")
+ plt.axis('off')
+ plt.show()
